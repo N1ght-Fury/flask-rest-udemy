@@ -1,5 +1,5 @@
 from flask import Flask, request
-from flask_restful import Resource, Api
+from flask_restful import Resource, Api, reqparse
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
@@ -13,11 +13,17 @@ api = Api(app)
 
 jwt = JWTManager(app)
 
-
 items = []
 
 
 class Item(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument(
+        'price', type=float,
+        required=True,
+        help="This field can not be left blank"
+    )
+
     @jwt_required
     def get(self, name):
         # if no item found return None
@@ -29,7 +35,8 @@ class Item(Resource):
         if next(filter(lambda item: item['name'] == name, items), None):
             return {'message': f'An item with name {name} already exists.'}, 400
 
-        data = request.get_json()  # force=True, silent=True
+        # data = request.get_json()  # force=True, silent=True
+        data = Item.parser.parse_args()
         item = {'name': name, 'price': data['price']}
         items.append(item)
 
@@ -37,7 +44,9 @@ class Item(Resource):
 
     @jwt_required
     def put(self, name):
-        data = request.get_json()
+
+        data = Item.parser.parse_args()
+
         item = next(filter(lambda item: item['name'] == name, items), None)
 
         if item is None:
