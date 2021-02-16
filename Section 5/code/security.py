@@ -8,6 +8,7 @@ from request_parser import AuthParser
 # We can add json parser for validating the data
 # We can check if user exists before registering
 
+
 class UserLogin(Resource):
     def post(self):
         data = AuthParser.parser.parse_args(req=request)
@@ -25,9 +26,14 @@ class UserLogin(Resource):
 class UserRegister(Resource):
     def post(self):
         data = AuthParser.parser.parse_args(req=request)
+
+        if User.find_by_username(data['username']):
+            return {'message': 'This user already exists'}, 400
+
         user = User.add_user(User(None, data['username'], data['password']))
 
+        # Bad code below, dont return password
         return {'message': 'Successfully created account',
-                "username": user.username,
-                "password": user.password,
+                'username': user.username,
+                'password': user.password,
                 }, 201
