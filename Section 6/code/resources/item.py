@@ -13,6 +13,12 @@ class Item(Resource):
         help="This field can not be left blank"
     )
 
+    parser.add_argument(
+        'store_id', type=float,
+        required=True,
+        help="Every item needs a store id"
+    )
+
     @jwt_required()
     def get(self, name):
         item = ItemModel.find_by_name(name)
@@ -27,10 +33,10 @@ class Item(Resource):
 
         # data = request.get_json()  # force=True, silent=True
         data = Item.parser.parse_args()
-        item = ItemModel(None, name, data['price'])
+        item = ItemModel(name, **data)
 
         try:
-            item.insert()
+            item.save_to_db()
         except:
             return {'message': 'An error occured'}, 500
 
@@ -40,54 +46,29 @@ class Item(Resource):
     def put(self, name):
 
         data = Item.parser.parse_args()
-
         item = ItemModel.find_by_name(name)
-        updated_item = ItemModel(None, name, data['price'])
 
         if item is None:
-            try:
-                updated_item.insert()
-            except:
-                return {'message': 'An error occured while adding item'}, 500
+            item = ItemModel(name, **data)
         else:
-            try:
-                updated_item.update()
-            except:
-                return {'message': 'An error occured while updating item'}, 500
+            item.price = data['price']
 
-        return updated_item.toJson(), 201
+        item.save_to_db()
+
+        return item.toJson(), 201
 
     @jwt_required()
     def delete(self, name):
-        ItemModel(None, name, None).delete()
+        item = ItemModel.find_by_name(name)
+
+        if item:
+            item.delete_from_db()
 
         return {'message': 'Item deleted'}
 
 
 class ItemList(Resource):
-    @classmethod
-    def get_items(cls):
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
-
-        query = "SELECT name,price FROM items"
-        result = cursor.execute(query)
-        items = []
-
-        for row in result:
-            items.append({'name': row[0], 'price': row[1]})
-
-        connection.close()
-
-        return items
-
     @jwt_required()
     def get(self):
-        return {'items': self.get_items()}, 200
-
-    @jwt_required()
-    def post(self, name):
-        item = {'name': name, 'price': 14}
-        """ items.append(item) """
-
-        return item, 201
+        return {'items': [item.toJson() for item in ItemModel.get_items()]}, 200
+        """ return {'items': list(map(lambda item: item.toJson(), ItemModel.get_items()))}, 200 """

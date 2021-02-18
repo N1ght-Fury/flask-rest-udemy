@@ -30,10 +30,12 @@ class UserRegister(Resource):
         if UserModel.find_by_username(data['username']):
             return {'message': 'This user already exists'}, 400
 
-        user = UserModel.add_user(UserModel(None, data['username'], data['password']))
+        user = UserModel(**data) # equals to data['username'], data['password']
+        user.save_to_db()
 
         # Bad code below, dont return password
         return {'message': 'Successfully created account',
+                'id': user.id,
                 'username': user.username,
                 'password': user.password,
                 }, 201

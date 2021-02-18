@@ -1,5 +1,13 @@
 {
     "python.pythonPath": "D:\\Documents\\Programming\\REST\\Flask REST Udemy\\Section 6\\venv\\Scripts\\python.exe",
-    "terminal.integrated.shellArgs.windows": ["-ExecutionPolicy", "Bypass"],
-    "python.linting.pylintArgs": ["--load-plugins", "pylint_flask_sqlalchemy", "--errors-only"],
+    "terminal.integrated.shellArgs.windows": [
+        "-ExecutionPolicy",
+        "Bypass"
+    ],
+    "python.linting.pylintArgs": [
+        "--load-plugins",
+        "pylint_flask_sqlalchemy",
+        "--errors-only",
+        "--ignored-classes=SQLAlchemy",
+    ],
 }
